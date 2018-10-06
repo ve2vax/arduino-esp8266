@@ -2,12 +2,12 @@
 #define CAYENNE_DEBUG
 #define CAYENNE_PRINT serial
 
-char ssid[] = "BELL515";
-char wifiPassword[] = "A441244D";
+char ssid[] = "BELLxxx";
+char wifiPassword[] = "passw0rd";
 
-char username[] = "3c89a750-4d65-11e8-a653-55835b4089d1";
-char password[] = "592cf143807aa9080c4f59fa3c14543db826583c";
-char clientID[] = "075ed260-c90e-11e8-9555-33faa5c5b5a8";
+char username[] = "xxxxxxxxxxxxxxx-xxxxxxxxxxx-xxxxxxxxx";
+char password[] = "xxxxxxxxx-xxxxxxxxxxx-xxxxxxxxxxxxxx";
+char clientID[] = "xxxxxxx-xxxxxxxxx-xxxxxxxxxxxx";
 
 void setup() {
   // put your setup code here, to run once:
