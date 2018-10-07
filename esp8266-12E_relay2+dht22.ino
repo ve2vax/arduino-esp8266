@@ -121,5 +121,6 @@ CAYENNE_OUT(V1)
 CAYENNE_OUT(V2)
 {
   // Send the Humidity value to Cayenne
-    Cayenne.virtualWrite(V2, (h));
+   h = dht.readHumidity();
+   Cayenne.virtualWrite(V2, (h));
 }
