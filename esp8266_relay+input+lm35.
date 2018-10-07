@@ -1,0 +1,81 @@
+//Normand Labossiere VE2VAX/va2nq  sept-2018
+// exemple avec  un relai + un input + sonde temperature LM35 sur pin ADC
+#include <CayenneMQTTESP8266.h>
+#define CAYENNE_DEBUG
+#define CAYENNE_PRINT serial     
+#define DIGITAL_PIN 5       //INPUT SWITCH 
+
+int inPin = 5;
+int lm35 = 0;
+int Clm35 = 0;
+int vref = 1;   //analog voltage reference ( 1 volt ou 3.3 volts ) sur le esp8266-E12  c'est 1 volt
+
+char ssid[] = "ve2vax";
+char wifiPassword[] = "12345678";
+
+char username[] = "xxxxxxx-xxxxxxx-xxxxx";
+char password[] = "xxxxxxxx-xxxxxxx-xxxxxx-xxxx";
+char clientID[] = "xxxxxxx-xxxxxx-xxxxxx-xxxx";
+
+void setup() {
+  // put your setup code here, to run once:
+  Cayenne.begin(username, password, clientID, ssid, wifiPassword);
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+  pinMode(5, INPUT_PULLUP); // pin input 
+  
+
+  pinMode(4, OUTPUT);
+  digitalWrite(4, LOW);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  Cayenne.loop(); 
+  delay(1000);     // # milli secondes de delais
+}
+
+// These functions are called when the Cayenne widget requests data for the Virtual Pin.
+CAYENNE_OUT(0)
+{
+  int val = digitalRead(inPin);                      // read the input pin 
+  Cayenne.virtualWrite(DIGITAL_PIN , val);
+}
+
+CAYENNE_OUT(1)
+{
+  
+  float lm35 = (((vref * analogRead(A0) * 100.0) / 1023) - 1.3);  // read adc input pin
+        //  la valeur 1.3 est la valeur de correction de temperature
+  Cayenne.virtualWrite(1 , lm35);
+  
+}
+CAYENNE_IN(6)
+{
+  int currentValue = getValue.asInt();
+  if (currentValue == 1)
+  {
+    //do whatever you want when you turn on the button on cayenne dashboard
+    digitalWrite(2, HIGH);
+  }
+  else
+  {
+    //do whatever you want when you turn off the button on cayenne dashboard
+    digitalWrite(2, LOW);
+  }
+}
+
+CAYENNE_IN(8)
+{
+  int currentValue = getValue.asInt();
+  if (currentValue == 1)
+  {
+    //do whatever you want when you turn on the button on cayenne dashboard
+    digitalWrite(4, HIGH);
+  }
+  else
+  {
+    //do whatever you want when you turn off the button on cayenne dashboard
+    digitalWrite(4, LOW);
+  }
+}
