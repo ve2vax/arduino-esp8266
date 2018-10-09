@@ -1,0 +1,104 @@
+//   Normand Labossiere VE2VAX / VA2NQ SEPT-2018
+// version modifyed , need to cut gpio 4 & 5 and replace  it with txd & rxd
+#include <CayenneMQTTESP8266.h>
+#define CAYENNE_DEBUG
+#define CAYENNE_PRINT serial
+
+#include <Wire.h>
+
+#include <Adafruit_BME280.h> //sensor library Adafruit or other
+#define DIGITAL_PIN  0     //D3 = gpio0,output relay modif. to gpio 12 
+
+
+char ssid[] = "ve2vax";
+char wifiPassword[] = "12345678";
+
+char username[] = "3c89a750-4d65-11e8-a653-55835b4089d1";
+char password[] = "592cf143807aa9080c4f59fa3c14543db826583c";
+char clientID[] = "14dd2d30-c90c-11e8-8a08-61f9e5c4f140";
+
+// Virtual Pins of the BME280 widget.
+#define TEMPERATURE_PIN V0
+#define BAROMETER_PIN V1
+#define HUMIDITY_PIN V2
+#define relay 3  //gpio3=rxd
+#define input 1  //gpio1=txd
+int vref = 1;   //analog voltage reference ( 1 volt ou 3.3 volts ) sur le esp8266-E12  c'est 1 volt
+
+Adafruit_BME280 bme; //Create an instance of the sensor
+
+
+void setup() 
+{
+  // put your setup code here, to run once:
+  Cayenne.begin(username, password, clientID, ssid, wifiPassword);
+  pinMode(2, OUTPUT);  //LED
+  digitalWrite(2, LOW); //LED 
+  // pinMode(0, OUTPUT);
+  // digitalWrite(0, HIGH);
+  pinMode(relay, OUTPUT);
+  digitalWrite(relay, HIGH);
+  pinMode(input, INPUT_PULLUP); // pin input
+  // ne pas utiliser pin4 , pin 5  ,D1, D2 
+  // elles sont utiliser pour I2C
+  // pin2 = led bleu ,running ok, connected to wifi
+  
+  bme.begin();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  Cayenne.loop();
+
+}
+
+CAYENNE_IN(6)  // relay
+{
+  int currentValue = getValue.asInt();
+  if (currentValue == 1)
+  {
+    //do whatever you want when you turn on the button on cayenne dashboard
+    digitalWrite(relay, HIGH);
+  }
+  else
+  {
+    //do whatever you want when you turn off the button on cayenne dashboard
+    digitalWrite(relay, LOW);
+  }
+}
+CAYENNE_IN(7)   //led 
+{
+  int currentValue = getValue.asInt();
+  if (currentValue == 1)
+  {
+    //do whatever you want when you turn on the button on cayenne dashboard
+    digitalWrite(2, HIGH);
+  }
+  else
+  {
+    //do whatever you want when you turn off the button on cayenne dashboard
+    digitalWrite(2, LOW);
+  }
+}
+
+
+CAYENNE_OUT_DEFAULT()
+{
+  // Send the Temperature value to Cayenne
+  Cayenne.virtualWrite(V0, bme.readTemperature(), TYPE_TEMPERATURE, UNIT_CELSIUS);
+  Cayenne.virtualWrite(V1, bme.readPressure(), TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL);
+  Cayenne.virtualWrite(V2, bme.readHumidity(), TYPE_RELATIVE_HUMIDITY, UNIT_PERCENT);
+}
+
+CAYENNE_OUT(3)
+{
+  float voltage = (((vref * analogRead(A0) * 22) / 1023) - 0.1);  // read adc input pin
+        //  la valeur 0.1 est la valeur de correction de 
+  Cayenne.virtualWrite(3, voltage, TYPE_VOLTAGE, UNIT_VOLTS);
+  
+}
+CAYENNE_OUT(4)
+{
+  int val = digitalRead(input);                      // read the input pin 
+  Cayenne.virtualWrite(4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+}
