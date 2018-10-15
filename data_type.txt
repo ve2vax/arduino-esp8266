@@ -1,0 +1,60 @@
+Reference  : data type used on cayenne
++------------------------------------+------------------+---------------------+------------+---------------------+
+|             Data Type              |    Type Value    |        Unit         | Unit Value |       Widgets       |
++------------------------------------+------------------+---------------------+------------+---------------------+
+| Digital Actuator                   | digital_actuator | Digital (0/1)       | d          | Button              |
+| Analog Actuator                    | analog_actuator  | Analog              | null       | Slider              |
+| Digital Sensor                     | digital_sensor   | Digital (0/1)       | d          | 2-State             |
+| Analog Sensor                      | analog_sensor    | Analog              | null       | gauge, value, graph |
+| Acceleration                       | accel            | Acceleration        | g          | gauge, value, graph |
+| Barometric pressure                | bp               | Pascal              | pa         | gauge, value, graph |
+| Barometric pressure                | bp               | Hectopascal         | hpa        | gauge, value, graph |
+| Battery                            | batt             | % (0 to 100)        | p          | gauge, value, graph |
+| Battery                            | batt             | Ratio               | r          | gauge, value, graph |
+| Battery                            | batt             | Volts               | v          | gauge, value, graph |
+| Carbon Dioxide                     | co2              | Parts per million   | ppm        | gauge, value, graph |
+| Carbon Monoxide                    | co               | Parts per million   | ppm        | gauge, value, graph |
+| Counter                            | counter          | Analog              | null       | gauge, value, graph |
+| Current                            | current          | Ampere              | a          | gauge, value, graph |
+| Current                            | current          | Milliampere         | a          | gauge, value, graph |
+| Energy                             | energy           | Killowatt Hour      | kwh        | gauge, value, graph |
+| External Waterleak                 | ext_wleak        | Analog              | null       | gauge, value, graph |
+| Frequency                          | freq             | Hertz               | hz         | gauge, value, graph |
+| Gyroscope                          | g                | Rotation per minute | rpm        | gauge, value, graph |
+| Gyroscope                          | g                | Degree per second   | dps        | gauge, value, graph |
+| Liquid                             | liquid           | Liter               | l          | gauge, value, graph |
+| Liquid                             | liquid           | Milliliter          | ml         | gauge, value, graph |
+| Luminosity                         | lum              | Lux                 | lux        | gauge, value, graph |
+| Luminosity                         | lum              | Volts               | v          | gauge, value, graph |
+| Luminosity                         | lum              | % (0 to 100)        | p          | gauge, value, graph |
+| Luminosity                         | lum              | Ratio               | r          | gauge, value, graph |
+| Magnetometer                       | mag              | Gauss               | ga         | gauge, value, graph |
+| Magnetometer                       | mag              | Tesla               | tesla      | gauge, value, graph |
+| Motion                             | motion           | Digital (0/1)       | d          | twostate            |
+| Nitrogen Dioxide                   | no2              | Parts per billion   | ppb        | gauge, value, graph |
+| Ozone                              | o3               | Parts per million   | ppm        | gauge, value, graph |
+| Particle Matter                    | pm               | Micrograms          | mg         | gauge, value, graph |
+| Power                              | pow              | Watts               | w          | gauge, value, graph |
+| Power                              | pow              | Kilowatts           | kw         | gauge, value, graph |
+| Proximity                          | prox             | Centimeter          | cm         | gauge, value, graph |
+| Proximity                          | prox             | Meter               | m          | gauge, value, graph |
+| Proximity                          | prox             | Digital (0/1)       | d          | gauge, value, graph |
+| Rain Level                         | rain_level       | Centimeter          | cm         | gauge, value, graph |
+| Rain Level                         | rain_level       | Millimeter          | mm         | gauge, value, graph |
+| Received signal strength indicator | rssi             | dBm                 | dbm        | gauge, value, graph |
+| Relative Humidity                  | rel_hum          | Percent (%)         | p          | gauge, value, graph |
+| Relative Humidity                  | rel_hum          | Ratio               | r          | gauge, value, graph |
+| Resistance                         | res              | Ohm                 | ohm        | gauge, value, graph |
+| Signal Noise Ratio                 | snr              | Decibels            | db         | gauge, value, graph |
+| Soil Moisture                      | soil_moist       | Percent (%)         | p          | gauge, value, graph |
+| Soil pH                            | soil_ph          | Analog              | null       | gauge, value, graph |
+| Soil Water Tension                 | soil_w_ten       | Kilopascal          | kpa        | gauge, value, graph |
+| Soil Water Tension                 | soil_w_ten       | Pascal              | pa         | gauge, value, graph |
+| Tank Level                         | tl               | Analog              | null       | gauge, value, graph |
+| Temperature                        | temp             | Fahrenheit          | f          | gauge, value, graph |
+| Temperature                        | temp             | Celsius             | c          | gauge, value, graph |
+| Temperature                        | temp             | Kelvin              | k          | gauge, value, graph |
+| Voltage                            | voltage          | Volts               | v          | gauge, value, graph |
+| Voltage                            | voltage          | Millivolts          | mv         | gauge, value, graph |
+| Wind Speed                         | wind_speed       | Kilometer per hour  | kmh        | gauge, value, graph |
++------------------------------------+------------------+---------------------+------------+---------------------+
