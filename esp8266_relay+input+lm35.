@@ -4,7 +4,7 @@
 #define CAYENNE_DEBUG
 #define CAYENNE_PRINT serial     
 #define DIGITAL_PIN 5       //INPUT SWITCH 
-
+#define RELAY 4    / relay gpio4
 int inPin = 5;
 int lm35 = 0;
 int Clm35 = 0;
@@ -39,18 +39,18 @@ void loop() {
 CAYENNE_OUT(0)
 {
   int val = digitalRead(inPin);                      // read the input pin 
-  Cayenne.virtualWrite(DIGITAL_PIN , val);
+  Cayenne.virtualWrite(DIGITAL_PIN , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }
 
 CAYENNE_OUT(1)
 {
   
   float lm35 = (((vref * analogRead(A0) * 100.0) / 1023) - 1.3);  // read adc input pin
-        //  la valeur 1.3 est la valeur de correction de temperature
-  Cayenne.virtualWrite(1 , lm35);
+        //  la valeur 1.3 est la valeur de correction de temperature, changer la valeur au besoin
+  Cayenne.virtualWrite(1 , lm35, TYPE_TEMPERATURE, UNIT_CELSIUS );
   
 }
-CAYENNE_IN(6)
+CAYENNE_IN(6)   //test pour le led bleu
 {
   int currentValue = getValue.asInt();
   if (currentValue == 1)
