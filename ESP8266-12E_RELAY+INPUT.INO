@@ -10,9 +10,9 @@
 char ssid[] = "ve2vax";
 char wifiPassword[] = "12345678";
 
-char username[] = "3c89a750-4d65-11e8-a653-55835b4089d1";
-char password[] = "592cf143807aa9080c4f59fa3c14543db826583c";
-char clientID[] = "14dd2d30-c90c-11e8-8a08-61f9e5c4f140";
+char username[] = "xxxxxxxx-xxxxxxxxx-xxxxxxxx";
+char password[] = "xxxxxxxx-xxxxxxxxx-xxxxxxxx";
+char clientID[] = "xxxxxxxx-xxxxxxxxx-xxxxxxxx";
 
 
 
