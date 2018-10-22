@@ -65,7 +65,7 @@ CAYENNE_IN(8)
 CAYENNE_OUT(0)
 {
   bool val = digitalRead(inPin);                      // read the input pin 
-  Cayenne.virtualWrite(DIGITAL_PIN , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+  Cayenne.virtualWrite(inPin , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }
 CAYENNE_OUT(V4)
 {
