@@ -1,4 +1,4 @@
-#// Normand Labossiere VE2VAX / VA2NQ SEPT-2018
+#// Normand Labossiere VE2VAX / VA2NQ oct-2018
 #include <CayenneMQTTESP8266.h>
 #define CAYENNE_DEBUG
 #define CAYENNE_PRINT serial
