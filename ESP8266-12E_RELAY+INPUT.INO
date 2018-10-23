@@ -28,12 +28,12 @@ void setup()
   digitalWrite(2, LOW);  //LED bleu
   pinMode(4, OUTPUT);
   digitalWrite(4, LOW);
-  pinMode(input, INPUT_PULLUP);  // pin input 
+  pinMode(input, INPUT_PULLUP);  // pin input avec  pull-up
  
  // ne pas utiliser pin4 , pin 5  , 
  // elles sont utiliser pour I2C si c' est le cas.
  // pin2 = led bleu ,running ok, connected to wifi
-  dht.begin();
+
 
 }
 
