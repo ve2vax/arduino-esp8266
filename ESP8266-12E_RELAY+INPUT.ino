@@ -4,7 +4,7 @@
 #define CAYENNE_PRINT serial
 
 
-#define input 5       //gpio5= INPUT SWITCH opto-coupleur
+#define input 5        //gpio5= INPUT SWITCH opto-coupleur
 #define relay 4      // gpio4 = relay
 
 char ssid[] = "ve2vax";
