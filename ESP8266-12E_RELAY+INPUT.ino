@@ -76,8 +76,8 @@ CAYENNE_IN(8)  //Relay
 
 
 
-CAYENNE_OUT(4)  //input  opto coupleur
+CAYENNE_OUT(V4)  //input  opto coupleur
 {
   int val = digitalRead(input);                      // read the input pin 
-  Cayenne.virtualWrite(input , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+  Cayenne.virtualWrite(V4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }
