@@ -86,8 +86,14 @@ CAYENNE_OUT(V1)
   //Lecture de l'humidité ambiante
      h = dht.readHumidity();
     // Lecture de la température en Celcius
+    char str[5];     //result string 5 positions + \0 at the end
+     // converti float to string type 
+     // format 5 positions with 2 decimal places
+     //
+     dtostrf(t, 4, 2, str );
+     //
      t = dht.readTemperature();
-    Cayenne.virtualWrite(V1, (t), TYPE_TEMPERATURE, UNIT_CELSIUS);
+    Cayenne.virtualWrite(V1, (str), TYPE_TEMPERATURE, UNIT_CELSIUS);
 }
 
 CAYENNE_OUT(V2)
