@@ -35,8 +35,8 @@ void setup()
 {
   // put your setup code here, to run once:
   Cayenne.begin(username, password, clientID, ssid, wifiPassword);
-  pinMode(2, OUTPUT);
-  digitalWrite(2, LOW);
+  // pinMode(2, OUTPUT);
+  // digitalWrite(2, LOW);
   pinMode(4, OUTPUT);
   digitalWrite(4, LOW);
   pinMode(input, INPUT_PULLUP);  // pin input 
