@@ -13,7 +13,7 @@
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
-
+#include <time.h>
 #define CAYENNE_DEBUG
 #define CAYENNE_PRINT serial
 
@@ -42,7 +42,7 @@ float t = 0;
 
 ESP8266WebServer server(80);
 
-char* ssid = "ve2vax-iot-18";
+char* ssid = "ve2vax-iot-18";     //Change the ssid for every devices you programme , to prevent duplicated SSID in AP
 
 String st;
 String content;
@@ -111,6 +111,8 @@ void setup() {
   Serial.begin(115200);
   EEPROM.begin(512);
   delay(1000);
+  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+  WiFi.enableAP(false);
     // run premiere fois  pour initialiser le eeprom et remettre les // aux 3 lignes ici bas
       //Serial.println("clearing eeprom");
       //for (int i = 0; i < 300; ++i) { EEPROM.write(i, 0); }
@@ -185,6 +187,7 @@ void setup() {
   //
    if ( esid.length() > 1 ) {
       Serial.print("trying wifi... ");
+      WiFi.hostname(ssid);
       WiFi.begin(esid.c_str(), epass.c_str());
       Serial.print("....ok ");
       if (testWifi()) {
@@ -281,7 +284,7 @@ void setupAP(void) {
   WiFi.softAP(ssid);
   Serial.println("softap");
   softap = 1;
-  delay(3000);
+  delay(1000);
   launchWeb(1);
   Serial.println("softAP Ready-over");
   
@@ -309,6 +312,20 @@ void createWebServer(int webtype)
    });
     server.on( "/test", handleTest );
 
+    server.on("/cleareeprom", []() {
+      content = "<!DOCTYPE HTML>\r\n<html>";
+      content += "<p>Clearing the EEPROM</p></html>";
+      server.send(200, "text/html", content);
+      Serial.println("clearing eeprom");
+      for (int i = 0; i < 288; ++i) { EEPROM.write(i, 0); }
+      EEPROM.commit();
+      WiFi.disconnect();
+      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+      WiFi.enableAP(false);
+      softap = 0;
+      delay(500);
+      ESP.restart();
+    });
     server.on("/setting", []() {
         String qsid = server.arg("ssid");
         String qpass = server.arg("pass");
@@ -392,6 +409,8 @@ void createWebServer(int webtype)
       for (int i = 0; i < 288; ++i) { EEPROM.write(i, 0); }
       EEPROM.commit();
       WiFi.disconnect();
+      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+      WiFi.enableAP(false);
       softap = 0;
       delay(500);
       ESP.restart();
@@ -401,10 +420,10 @@ void createWebServer(int webtype)
       content += "<p>Rebooting ESP8266-IOT</p></html>";
       server.send(200, "text/html", content);
       Serial.println("....");
+      delay(500);
       WiFi.disconnect();
-      delay(500);
-      Serial.println("....");
-      delay(500);
+      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+      WiFi.enableAP(false);
       ESP.restart();
     });
   }
@@ -415,7 +434,6 @@ void loop()
    //if (softap == 1) { Cayenne.loop(); }
    if (WiFi.status() == WL_CONNECTED) { Cayenne.loop(); }
   server.handleClient();
-  
 }
 
 // Les fonctions de cayenne called by  Cayenne.loop
@@ -454,7 +472,6 @@ CAYENNE_OUT(V2)
   // Send the Humidity value to Cayenne
     h = dht.readHumidity();
     
-   
     Cayenne.virtualWrite(V2, (h), TYPE_RELATIVE_HUMIDITY, UNIT_PERCENT);
 }
 CAYENNE_OUT(V3)  //input  opto coupleur
