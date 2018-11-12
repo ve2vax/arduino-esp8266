@@ -1,5 +1,5 @@
 // Normand Labossiere VE2VAX / VA2NQ Nov-2018
-//
+// Projet  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour le configurer avec l'adresse IP: 192.168.4.1
 // et ainsi le programmer en serie et les distribuer,aux amis, et pour simplifier sa reutilisation.
@@ -307,7 +307,7 @@ void createWebServer(int webtype)
         content += "<br><input type='submit'></form></h4>";
         content += "<p>Click on the submit button when all boxes are filled, and the input will be stored in the eeprom of the ESP8266 .</p>";
         content += "<p>sub page available: /reset for reboot, /cleareeprom </p>";
-        content += "<br><form><input type='button' value='Controle IOT' onclick="location.href='../test'"></form>";
+        content += "<br><form><input type='button' value='Controle IOT' onclick=""location.href='../test'""></form>";
         content += "<p> &#169; VE2VAX </p></html>";
         server.send(200, "text/html", content);  
    });
