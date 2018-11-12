@@ -100,7 +100,7 @@ void handleSubmit() {
     server.send (200, "text/html", getPage());
   } else if (RelayValue == "0") {
     digitalWrite(relay, HIGH);
-    etatRelay = "<mark>ON</mark>";
+    etatRelay = "<span style=""background-color: #FF0000"">ON</span>";
     server.send (200, "text/html", getPage());
   } else {
     Serial.println("Error Relay Value");
