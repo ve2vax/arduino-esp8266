@@ -27,6 +27,7 @@
 #define DHTTYPE DHT22     // DHT22 = (AM2302)
 
 int val;
+int thermostat_type;
 int softap = 0;
 String esid = "";
 String epass = "";
@@ -310,10 +311,12 @@ void createWebServer(int webtype)
         content += "</p>";
         content += "<p align='center'>VE2VAX IOT SETUP</p></h3>";
         content += st;
-        content += "</p><h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>cayenne_client_id:<br> </label><input name='cayenne_client_id' length=64><br>";
+        content += "</p><h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>cayenne_client_id:<br> </label><input name='cayenne_client_id' length=64> ";
+        content += "<br><li><lu><INPUT type='radio' name='thermostat_type' value='0'>cooling";
+        content += "<INPUT type='radio' name='thermostat_type' value='1'>heating</li></ul>";
         content += "<br><input type='submit'></form></h4>";
         content += "<p>Click on the submit button when all boxes are filled, and the input will be stored in the eeprom of the ESP8266 .</p>";
-        content += "<p>sub page available: /reset for reboot, /cleareeprom </p>";
+        content += "<p>sub page available: /reset for reboot, /cleareeprom ,/ip , /test</p>";
         content += "<br><form><input type='button' value='Controle IOT' onclick=""location.href='../test'""></form>";
         content += "<p> &#169; VE2VAX </p></html>";
         server.send(200, "text/html", content);  
