@@ -190,6 +190,9 @@ void setup() {
 
   //
    if ( esid.length() > 1 ) {
+      WiFi.disconnect();
+      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint
+      WiFi.enableAP(false);
       Serial.print("trying wifi... ");
       WiFi.hostname(ssid);
       WiFi.begin(esid.c_str(), epass.c_str());
