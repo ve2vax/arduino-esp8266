@@ -505,21 +505,16 @@ CAYENNE_OUT(V8)
   Cayenne.virtualWrite(V8 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }  
 // Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
-CAYENNE_IN(9)  // channel 9 pour chauffage
+CAYENNE_IN(9)  // channel 9 
 {
   if (thermostat_type == "1") {
   heat = getValue.asInt(); }
   else {
   cool = getValue.asInt(); }
-}
+
   t = dht.readTemperature();
 }
-// Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
-CAYENNE_IN(10)  // channel 10 pour climatisation
-{
-  cool = getValue.asInt();
-  t = dht.readTemperature();
-}
+
 CAYENNE_OUT(V1)
 {
      // Lecture de la température en Celcius
@@ -531,9 +526,11 @@ CAYENNE_OUT(V1)
      dtostrf(t, 4, 2, str_t );
      //
     Cayenne.virtualWrite(V1, (str_t), TYPE_TEMPERATURE, UNIT_CELSIUS);
-    thermostat_heat();   // Thermostat pour chauffage 
-    //  thermostat_cool();   // Thermostat pour chauffage
-}
+    if (thermostat_type == "1") {
+      thermostat_heat(); }  // Thermostat pour chauffage 
+    else {
+      thermostat_cool(); }  // Thermostat pour climatisation
+    }
 
 CAYENNE_OUT(V2)
 {
@@ -549,7 +546,11 @@ CAYENNE_OUT(V3)  //input  opto coupleur
   Cayenne.virtualWrite(V3 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }
 CAYENNE_OUT(V9) {
-Cayenne.virtualWrite(V9, heat);
+  if (thermostat_type == "1") {
+    Cayenne.virtualWrite(V9, heat); }
+  else {
+    Cayenne.virtualWrite(V9, cool); }
+
 }
 //CAYENNE_OUT(V4)
 //  Cayenne.virtualWrite(V4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
