@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.3
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.4
 // Projet  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour le configurer avec l'adresse IP: 192.168.4.1
@@ -187,6 +187,9 @@ void setup() {
   //
    if ( esid.length() > 1 ) {
       Serial.print("trying wifi... ");
+      WiFi.disconnect();
+      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+      WiFi.enableAP(false);
       WiFi.hostname(ssid);
       WiFi.begin(esid.c_str(), epass.c_str());
       Serial.print("....ok ");
@@ -488,3 +491,5 @@ CAYENNE_OUT(V3)  //input  opto coupleur
 //  int val = digitalRead(relay_state);                      // loop relay state read, read the input pin 
 //  Cayenne.virtualWrite(V4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 //}
+
+//
