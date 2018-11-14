@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.2
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.3
 // Projet  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour le configurer avec l'adresse IP: 192.168.4.1
@@ -303,7 +303,7 @@ void createWebServer(int webtype)
         content += "</p>";
         content += "<p align='center'>VE2VAX IOT SETUP</p></h3>";
         content += st;
-        content += "</p><h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>client_id:<br> </label><input name='Cayenne_client_id' length=64><br>";
+        content += "</p><h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>cayenne_client_id:<br> </label><input name='Cayenne_client_id' length=64><br>";
         content += "<br><input type='submit'></form></h4>";
         content += "<p>Click on the submit button when all boxes are filled, and the input will be stored in the eeprom of the ESP8266 .</p>";
         content += "<p>sub page available: /reset for reboot, /cleareeprom </p>";
