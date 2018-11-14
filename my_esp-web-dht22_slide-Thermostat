@@ -1,5 +1,5 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.1 beta
-// Projet  le plus complet 
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.1.1 beta
+// UN des Projets  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
 // et ainsi le programmer en serie et les distribuer,aux amis, et pour simplifier sa reutilisation.
@@ -27,7 +27,6 @@
 #define DHTTYPE DHT22     // DHT22 = (AM2302)
 
 int val;
-int thermostat_type;
 int softap = 0;
 String esid = "";
 String epass = "";
@@ -36,6 +35,7 @@ String etatRelay = "Off";
 String cayenne_passwd;
 String cayenne_userid;
 String cayenne_client_id;
+String thermostat_type;
 // objets
 DHT dht(DHTPIN, DHTTYPE); 
 unsigned long h = 0;
@@ -185,6 +185,10 @@ void setup() {
     {
       cayenne_client_id += char(EEPROM.read(i));
     }
+    for (int i = 288; i < 290; ++i)
+    {
+      thermostat_type += char(EEPROM.read(i));
+    }
   Serial.print("Cayenne client_id: ");
   Serial.println(cayenne_client_id);
   // Lecture des variables dans  le eeprom terminer
@@ -328,7 +332,7 @@ void createWebServer(int webtype)
       content += "<p>Clearing the EEPROM</p></html>";
       server.send(200, "text/html", content);
       Serial.println("clearing eeprom");
-      for (int i = 0; i < 288; ++i) { EEPROM.write(i, 0); }
+      for (int i = 0; i < 290; ++i) { EEPROM.write(i, 0); }
       EEPROM.commit();
       WiFi.disconnect();
       WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
@@ -343,6 +347,7 @@ void createWebServer(int webtype)
         String qcuid = server.arg("cayenne_userid");
         String qcpass = server.arg("cayenne_passwd");
         String qcclid = server.arg("cayenne_client_id");
+        String qcthermostat_type = server.arg("thermostat_type");
         if (qsid.length() > 0 && qpass.length() > 0) {
           Serial.println("clearing eeprom");
           for (int i = 0; i < 96; ++i) { EEPROM.write(i, 0); }
@@ -389,6 +394,12 @@ void createWebServer(int webtype)
           for (int i = 0; i < qcclid.length(); ++i)
             {
               EEPROM.write(224+i, qcclid[i]);
+              Serial.print("Wrote: ");
+              Serial.println(qcclid[i]);
+            }
+            for (int i = 0; i < qcthermostat_type.length(); ++i)
+            {
+              EEPROM.write(288+i, qcthermostat_type[i]);
               Serial.print("Wrote: ");
               Serial.println(qcclid[i]);
             }
@@ -496,7 +507,11 @@ CAYENNE_OUT(V8)
 // Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
 CAYENNE_IN(9)  // channel 9 pour chauffage
 {
-  heat = getValue.asInt();
+  if (thermostat_type == "1") {
+  heat = getValue.asInt(); }
+  else {
+  cool = getValue.asInt(); }
+}
   t = dht.readTemperature();
 }
 // Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
