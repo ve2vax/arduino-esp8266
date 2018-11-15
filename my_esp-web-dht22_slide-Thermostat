@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.3.2 beta
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.3.3 beta
 // UN des Projets  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -29,7 +29,7 @@
 char* ssid = "ve2ums-iot-19" ;  //Change the ssid for every devices you program 
 //                              //to prevent duplicated SSID in AP
 //
-int val;
+int opto_in;
 int softap = 0;
 String esid = "";
 String epass = "";
@@ -51,7 +51,8 @@ String st;
 String content;
 int statusCode;
 
-int temp_set;
+int temp_set = 21;   //temperature thermostat valeur de depart par defaut on power on
+String temp_set_str = "21";
 
 // Section declaration de la string  de la page web "/test"
 String getPage(){
@@ -67,7 +68,7 @@ String getPage(){
   page += h;
   page += "%</li>";
   page += "<li>Entr&#233;e 0/1: ";
-  page += val;
+  page += opto_in;
   page += "</li></ul><br>";
   page += "<h3>Relai</h3>";
   page += "<form action='/test' method='POST'>";
@@ -87,7 +88,7 @@ void server_cleareeprom() {
       content += "<p>Clearing the EEPROM</p></html>";
       server.send(200, "text/html", content);
       Serial.println("clearing eeprom");
-      for (int i = 0; i < 292; ++i) { EEPROM.write(i, 0); }
+      for (int i = 0; i < 300; ++i) { EEPROM.write(i, 0); }
       EEPROM.commit();
       reset_wifi();
       softap = 0;
@@ -102,7 +103,7 @@ void handleTest(){
     server.send (200, "text/html", getPage());
   t = dht.readTemperature();
   h = dht.readHumidity();
-  val = digitalRead(input);                      // read the input pin 
+  opto_in = digitalRead(input);                      // read the input pin 
   }
 }
 
@@ -126,7 +127,7 @@ void handleSubmit() {
 }
 
 void setup() {
-  temp_set=21;   //temperature thermostat valeur de depart par defaut on power on
+  
   Serial.begin(115200);
   EEPROM.begin(512);
   delay(1000);
@@ -190,16 +191,17 @@ void setup() {
     {
       cayenne_client_id += char(EEPROM.read(i));
     }
-    for (int i = 288; i < 290; ++i)
+    for (int i = 288; i < 292; ++i)
     {
       thermostat_type += char(EEPROM.read(i));
     }
-    for (int i = 290; i < 292; ++i)
+    for (int i = 292; i < 300; ++i)
     {
-      temp_set += char(EEPROM.read(i));
+      temp_set_str += char(EEPROM.read(i));
     }
-  Serial.print("Cayenne client_id: ");
-  Serial.println(cayenne_client_id);
+    temp_set = (temp_set_str.toInt());
+  Serial.print("temp_set: ");
+  Serial.println(temp_set);
   // Lecture des variables dans  le eeprom terminer
   //
    if ( esid.length() > 1 ) {
@@ -235,7 +237,6 @@ bool testWifi(void) {
 
 void launchWeb(int webtype) {
   Serial.println("");
-  Serial.println("WiFi connected");
   Serial.print("Local IP: ");
   Serial.println(WiFi.localIP());
   Serial.print("SoftAP IP: ");
@@ -308,7 +309,7 @@ void setupAP(void) {
 }
 void reset_wifi() {
   WiFi.disconnect();
-  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint 
   WiFi.enableAP(false);
 }
 void createWebServer(int webtype)
@@ -350,7 +351,7 @@ void createWebServer(int webtype)
         String qctemp_set = server.arg("temp_set");
         if (qsid.length() > 0 && qpass.length() > 0) {
           Serial.println("clearing eeprom");
-          for (int i = 0; i < 292; ++i) { EEPROM.write(i, 0); }
+          for (int i = 0; i < 300; ++i) { EEPROM.write(i, 0); }
         Serial.println(qsid);
         Serial.println("");
         Serial.println(qpass);
@@ -408,7 +409,7 @@ void createWebServer(int webtype)
             }
             for (int i = 0; i < qctemp_set.length(); ++i)
             {
-              EEPROM.write(290+i, qctemp_set[i]);
+              EEPROM.write(292+i, qctemp_set[i]);
               Serial.print("Wrote: ");
               Serial.println(qctemp_set[i]);
             }
@@ -466,20 +467,19 @@ void thermostat_cool() {
   t = dht.readTemperature();
   if ((temp_set >= 1) && (t < temp_set))  // si la temperature est= ou sous ZERO, coupe la climatisation
   {                            // ou allume lea climatisation si  temp_set value  < t
-    // trun off the cooling
+    // turn off the cooling
     digitalWrite(relay, HIGH );
     etatRelay = "Off";
-    val = 1;
+    
   }
   else
   {
     //turn on the cooling
     digitalWrite(relay, LOW);
     etatRelay = (on_red);
-    val = 0;
   }
 }
-void loop() 
+void loop() // boucle  principale
 {
    //if (softap == 1) { Cayenne.loop(); }
    if (WiFi.status() == WL_CONNECTED) { Cayenne.loop(); }
@@ -504,9 +504,9 @@ CAYENNE_IN(8)
 }
 CAYENNE_OUT(V8)
 {
-  val = digitalRead(relay);  // read the input pin 
-  if (val == 1) {Cayenne.virtualWrite(V8 , 0, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
-  else {Cayenne.virtualWrite(V8 , 1, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
+  int value = digitalRead(relay);  // read the input pin 
+  if (value == 1) { Cayenne.virtualWrite(V8 , 0, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
+  else { Cayenne.virtualWrite(V8 , 1, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
   
 }  
 // Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
@@ -543,19 +543,20 @@ CAYENNE_OUT(V2)
 }
 CAYENNE_OUT(V3)  //input  opto coupleur
 {
-  val = digitalRead(input);                      // read the input pin 
-  Cayenne.virtualWrite(V3 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+  opto_in = digitalRead(input);                      // read the input pin 
+  Cayenne.virtualWrite(V3 , opto_in, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 }
-CAYENNE_OUT(V9) {
-    Cayenne.virtualWrite(V9, temp_set); 
+CAYENNE_OUT(V9) {      // custom widget slide to set thermostat value > Cayenne
+    Cayenne.virtualWrite(V9, (temp_set)); 
 
 }
 //CAYENNE_OUT(V4)
-//  Cayenne.virtualWrite(V4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+//  Cayenne.virtualWrite(V4 , opto_in, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 //}
 // Fonction Cayenne optionnel pour lire l'etat du relay si vous avez brancher la sortie sur (relay_state)
 //CAYENNE_OUT(V4) 
 //{
-//  int val = digitalRead(relay_state);                      // loop relay state read, read the input pin 
-//  Cayenne.virtualWrite(V4 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+//  int value = digitalRead(relay_state);                      // loop relay state read, read the input pin 
+//  Cayenne.virtualWrite(V4 , value, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
 //}
+
