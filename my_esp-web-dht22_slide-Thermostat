@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.1.2 beta
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.3.2 beta
 // UN des Projets  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -25,7 +25,10 @@
 // Dé-commentez la ligne qui correspond à votre capteur 
 //#define DHTTYPE DHT11   // DHT11 
 #define DHTTYPE DHT22     // DHT22 = (AM2302)
-
+//
+char* ssid = "ve2ums-iot-19" ;  //Change the ssid for every devices you program 
+//                              //to prevent duplicated SSID in AP
+//
 int val;
 int softap = 0;
 String esid = "";
@@ -36,14 +39,13 @@ String cayenne_passwd;
 String cayenne_userid;
 String cayenne_client_id;
 String thermostat_type;
+String on_red = "<span style='background-color: #FF0000'>ON</span>";
 // objets
 DHT dht(DHTPIN, DHTTYPE); 
 unsigned long h = 0;
 float t = 0;
 
 ESP8266WebServer server(80);
-
-char* ssid = "ve2vax-iot-18";     //Change the ssid for every devices you programme , to prevent duplicated SSID in AP
 
 String st;
 String content;
@@ -79,7 +81,20 @@ String getPage(){
   page += "</body></html>";
   return page;
 }
-
+void server_cleareeprom() {
+  server.on("/cleareeprom", []() {
+      content = "<!DOCTYPE HTML>\r\n<html>";
+      content += "<p>Clearing the EEPROM</p></html>";
+      server.send(200, "text/html", content);
+      Serial.println("clearing eeprom");
+      for (int i = 0; i < 292; ++i) { EEPROM.write(i, 0); }
+      EEPROM.commit();
+      reset_wifi();
+      softap = 0;
+      delay(500);
+      ESP.restart();
+    });
+}
 void handleTest(){ 
   if (server.hasArg("Relai_b")) {
     handleSubmit();
@@ -97,13 +112,13 @@ void handleSubmit() {
   RelayValue = server.arg("Relai_b");
   Serial.println("Set relay "); 
   Serial.print(RelayValue);
-  if (RelayValue == "1") {
+  if (RelayValue == "0") {
     digitalWrite(relay, LOW);
-    etatRelay = "Off";
+    etatRelay = (on_red);
     server.send (200, "text/html", getPage());
-  } else if (RelayValue == "0") {
+  } else if (RelayValue == "1") {
     digitalWrite(relay, HIGH);
-    etatRelay = "<span style='background-color: #FF0000'>ON</span>";
+    etatRelay = "Off";
     server.send (200, "text/html", getPage());
   } else {
     Serial.println("Error Relay Value");
@@ -111,18 +126,11 @@ void handleSubmit() {
 }
 
 void setup() {
-  
   temp_set=21;   //temperature thermostat valeur de depart par defaut on power on
   Serial.begin(115200);
   EEPROM.begin(512);
   delay(1000);
-  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
-  WiFi.enableAP(false);
-    // run premiere fois  pour initialiser le eeprom et remettre les // aux 3 lignes ici bas
-      //Serial.println("clearing eeprom");
-      //for (int i = 0; i < 300; ++i) { EEPROM.write(i, 0); }
-      //EEPROM.commit();
-  //
+  reset_wifi();
   //Setup cayenne variable et env.
       pinMode(relay_state, INPUT);
       pinMode(2, OUTPUT);
@@ -141,9 +149,6 @@ void setup() {
   Serial.println("Startup");
   // Lecture du eeprom pour wifi, ssid & pass
   Serial.println("Lecture du EEPROM ssid");
-  
-  
-  
   for (int i = 0; i < 32; ++i)
     { 
       esid += char(EEPROM.read(i));
@@ -196,12 +201,9 @@ void setup() {
   Serial.print("Cayenne client_id: ");
   Serial.println(cayenne_client_id);
   // Lecture des variables dans  le eeprom terminer
-
   //
    if ( esid.length() > 1 ) {
-      WiFi.disconnect();
-      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint
-      WiFi.enableAP(false);
+      reset_wifi();
       Serial.print("trying wifi... ");
       WiFi.hostname(ssid);
       WiFi.begin(esid.c_str(), epass.c_str());
@@ -242,8 +244,7 @@ void launchWeb(int webtype) {
   // Start the server
   Serial.println("Server started."); 
   if (softap == 0) { 
-    // WiFi.disconnect();
-    delay(1000);
+    delay(100);
     Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str());   //, esid.c_str(), epass.c_str());
     Serial.println("Cayenne begin, Cayenne IOT ready .");
     Serial.println((WiFi.status()));
@@ -305,47 +306,40 @@ void setupAP(void) {
   Serial.println("softAP Ready-over");
   
 }
-
+void reset_wifi() {
+  WiFi.disconnect();
+  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
+  WiFi.enableAP(false);
+}
 void createWebServer(int webtype)
 {
   if ( webtype == 1 ) {
     server.on("/", []() {
         IPAddress ip = WiFi.softAPIP();
         String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
-        content += "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'xhtml1/xhtml1-transitional.dtd'>";
+        content += "<!DOCTYPE HTML>\r\n<html>";
         content += "<head><meta http-equiv='Content-Type' content='text/html; charset=utf-8' /><style> body { background-color: #fffff; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }</style>";
-        content += "<h3><p align='center'>Hello VE2VAX from ESP8266-IOT at ";
+        content += "</head><title>Ve2vax IOT setup</title><body><h3><p align='center'>Allo VE2VAX from ESP8266-IOT at ";
         content += ipStr;
         content += "</p>";
         content += "<p align='center'>VE2VAX IOT SETUP</p></h3>";
         content += st;
-        content += "</p><h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>cayenne_client_id:<br> </label><input name='cayenne_client_id' length=64> ";
-        content += "<br><li><lu><input type='radio' name='thermostat_type' value='0'>cooling";
-        content += "<input type='radio' name='thermostat_type' value='1'>heating<br>";
-        content += "<input type='number' name='temp_set' min='1' max='30'>temperature set </li></lu>";
+        content += "<h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>Cayenne_client_id:<br> </label><input name='cayenne_client_id' length=64> ";
+        content += "<br><input type='radio' name='thermostat_type' value='0'> <label> cooling: </label>";
+        content += "<input type='radio' name='thermostat_type' value='1'> <label> heating: </label>";
+        content += "<input type='radio' name='disable' value='2' checked='checked' /> <label> disable: </label>";
+        content += "<input type='number' name='temp_set' min='0' max='30'> <LABEL> target temperature set</LABEL></li></lu>";
         content += "<br><input type='submit'></form></h4>";
         content += "<p>Click on the submit button when all boxes are filled, and the input will be stored in the eeprom of the ESP8266 .</p>";
         content += "<p>sub page available: /reset for reboot, /cleareeprom ,/ip , /test</p>";
         content += "<br><form><input type='button' value='Controle IOT' onclick=""location.href='../test'""></form>";
-        content += "<p> &#169; VE2VAX </p></html>";
+        content += "<p>&#169; VE2VAX </p></body></html>";
         server.send(200, "text/html", content);  
    });
     server.on( "/test", handleTest );
 
-    server.on("/cleareeprom", []() {
-      content = "<!DOCTYPE HTML>\r\n<html>";
-      content += "<p>Clearing the EEPROM</p></html>";
-      server.send(200, "text/html", content);
-      Serial.println("clearing eeprom");
-      for (int i = 0; i < 292; ++i) { EEPROM.write(i, 0); }
-      EEPROM.commit();
-      WiFi.disconnect();
-      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
-      WiFi.enableAP(false);
-      softap = 0;
-      delay(500);
-      ESP.restart();
-    });
+    server_cleareeprom();
+    
     server.on("/setting", []() {
         String qsid = server.arg("ssid");
         String qpass = server.arg("pass");
@@ -438,45 +432,34 @@ void createWebServer(int webtype)
     server.on( "/", handleTest );
   
     server.on( "/test", handleTest );
+
+    server_cleareeprom();
     
-    server.on("/cleareeprom", []() {
-      content = "<!DOCTYPE HTML>\r\n<html>";
-      content += "<p>Clearing the EEPROM</p></html>";
-      server.send(200, "text/html", content);
-      Serial.println("clearing eeprom");
-      for (int i = 0; i < 292; ++i) { EEPROM.write(i, 0); }
-      EEPROM.commit();
-      WiFi.disconnect();
-      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
-      WiFi.enableAP(false);
-      softap = 0;
-      delay(500);
-      ESP.restart();
-    });
     server.on("/reset", []() {
       content = "<!DOCTYPE HTML>\r\n<html>";
       content += "<p>Rebooting ESP8266-IOT</p></html>";
       server.send(200, "text/html", content);
       Serial.println("....");
       delay(500);
-      WiFi.disconnect();
-      WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint after 0ne hour
-      WiFi.enableAP(false);
+      reset_wifi();
       ESP.restart();
     });
   }
 }
+
 void thermostat_heat() {
   t = dht.readTemperature();
   if ((temp_set >= 1 ) && ( t < temp_set )) // si la temperature est= ou sous ZERO, coupe le chauffage
   {                            // ou allume le chauffage si  temp_set value  < t 
     //turn off the heating
     digitalWrite(relay, HIGH );
+    etatRelay = "Off";
   }
   else
   {
     //turn on the heating
     digitalWrite(relay, LOW);
+    etatRelay = (on_red);
   }
 }
 void thermostat_cool() {
@@ -485,11 +468,15 @@ void thermostat_cool() {
   {                            // ou allume lea climatisation si  temp_set value  < t
     // trun off the cooling
     digitalWrite(relay, HIGH );
+    etatRelay = "Off";
+    val = 1;
   }
   else
   {
     //turn on the cooling
     digitalWrite(relay, LOW);
+    etatRelay = (on_red);
+    val = 0;
   }
 }
 void loop() 
@@ -506,18 +493,21 @@ CAYENNE_IN(8)
   if (currentValue == 1)
   {
     //do whatever you want when you turn on the button on cayenne dashboard
-    digitalWrite(relay, HIGH );
-  }
+    digitalWrite(relay, LOW );
+    etatRelay = (on_red); }
   else
   {
     //do whatever you want when you turn off the button on cayenne dashboard
-    digitalWrite(relay, LOW);
+    digitalWrite(relay, HIGH);
+    etatRelay = "Off";
   }
 }
 CAYENNE_OUT(V8)
 {
-  val = digitalRead(relay);                      // read the input pin 
-  Cayenne.virtualWrite(V8 , val, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
+  val = digitalRead(relay);  // read the input pin 
+  if (val == 1) {Cayenne.virtualWrite(V8 , 0, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
+  else {Cayenne.virtualWrite(V8 , 1, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL); }
+  
 }  
 // Fonction Cayenne  pour lire la valeur du thermostat desirer via cayenne avec le custom widget slider
 CAYENNE_IN(9)  // channel 9 
@@ -537,9 +527,9 @@ CAYENNE_OUT(V1)
      dtostrf(t, 4, 2, str_t );
      //
     Cayenne.virtualWrite(V1, (str_t), TYPE_TEMPERATURE, UNIT_CELSIUS);
-    if (thermostat_type == "1") {
+    if (thermostat_type == "0") {
       thermostat_heat(); }  // Thermostat pour chauffage 
-    else {
+    if (thermostat_type == "1") {
       thermostat_cool(); }  // Thermostat pour climatisation
     }
 
