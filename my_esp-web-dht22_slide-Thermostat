@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.0
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.1
 // UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
