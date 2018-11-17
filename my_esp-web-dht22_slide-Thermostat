@@ -346,7 +346,7 @@ void createWebServer(int webtype)
       content += "<h4><form method='get' action='setting'><label>SSID:<br> </label><input name='ssid' length=32><br><label>WiFi password:<br>  </label><input name='pass' length=32><br><label>Cayenne_userid:<br> </label><input name='cayenne_userid' length=64><br><label>Cayenne_password:<br> </label><input name='cayenne_passwd' length=64><br><label>Cayenne_client_id:<br> </label><input name='cayenne_client_id' length=64> ";
       content += "<br><input type='radio' name='thermostat_type' value='0'> <label> cooling: </label>";
       content += "<input type='radio' name='thermostat_type' value='1'> <label> heating: </label>";
-      content += "<input type='radio' name='disable' value='2' checked='checked' /> <label> disable: </label>";
+      content += "<input type='radio' name='thermostat_type' value='2' checked='checked' /> <label> disable: </label>";
       content += "<input type='number' name='temp_set' min='0' max='30'> <LABEL> target temperature set</LABEL></li></lu>";
       content += "<br><input type='submit'></form></h4>";
       content += "<p>Click on the submit button when all boxes are filled, and the input will be stored in the eeprom of the ESP8266 .</p>";
