@@ -179,7 +179,7 @@ void handleSubmit() {
 void setup() {
 #ifdef DHTTYPE
   dht.begin();
- #ELSE
+ #else
   sensor.begin(); //ds18b20  
 #endif  
   Serial.begin(115200);
