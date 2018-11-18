@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.1
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.3
 // UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -71,6 +71,9 @@ String getPage() {
   page += "%</li>";
   page += "<li>Entr&#233;e 0/1: ";
   page += opto_in;
+  page += "</li></ul>";
+  page += "<ul><li>Temp&#233;rature set: ";
+  page += temp_set;
   page += "</li></ul><br>";
   page += "<h3>Relai</h3>";
   page += "<form action='/test' method='POST'>";
@@ -81,7 +84,7 @@ String getPage() {
   page += "<INPUT type='radio' name='Relai_b' value='0'>OFF</li></ul>";
   page += "<br><input type='radio' name='thermostat_type' value='0'> <label> cooling: </label>";
   page += "<input type='radio' name='thermostat_type' value='1'> <label> heating: </label>";
-  page += "<input type='radio' name='thermostat_type' value='2' checked='checked' /> <label> disable: </label>";
+  page += "<input type='radio' name='thermostat_type' value='2'> <label> disable: </label>"; // checked='checked'
   page += "<INPUT type='submit' value='Actualiser'></h3>";
   page += "<br>";
   page += "</body></html>";
@@ -113,6 +116,11 @@ void handle_cleareeprom() {
     delay(100);
 }
 void handleTest() {
+  if (server.hasArg("thermostat_type")) {
+    thermostat_type = server.arg("thermostat_type");
+    Serial.print("changed thermostat_type value:");
+    Serial.println(thermostat_type);
+  }
   if (server.hasArg("Relai_b")) {
     Serial.print("rcv new value Relai_b:");
     RelayValue = server.arg("Relai_b");
@@ -125,9 +133,9 @@ void handleTest() {
     server.send (200, "text/html", getPage());
     t = dht.readTemperature();
     h = dht.readHumidity();
-    
-  }
+    }
 }
+
 
 void handleSubmit() {
   // Change le GPIO relay / Update GPIO Relay from web /test page
@@ -473,7 +481,7 @@ void createWebServer(int webtype)
 
 void thermostat_heat() {
   t = dht.readTemperature();
-  if ((temp_set >= 1 ) && ( t < temp_set )) // si la temperature est= ou sous ZERO, coupe le chauffage
+  if ((temp_set >= 1 ) && ( t > temp_set )) // si la temperature est= ou sous ZERO, coupe le chauffage
   { // ou allume le chauffage si  temp_set value  < t
     //turn off the heating
     relai_on();
@@ -481,21 +489,20 @@ void thermostat_heat() {
   else
   {
     //turn on the heating
-    relai_off();
+    if ((temp_set >= 1 ) && ( (t+0.3) < temp_set )) {
+    relai_off(); }
   }
 }
 void thermostat_cool() {
   t = dht.readTemperature();
-  if ((temp_set >= 1) && (t < temp_set))  // si la temperature est= ou sous ZERO, coupe la climatisation
-  { // ou allume lea climatisation si  temp_set value  < t
+  if ((temp_set >= 1) && (t < temp_set)) {  // si la temperature est= ou sous ZERO, coupe la climatisation
+    // ou allume lea climatisation si  temp_set value  < t
     // turn off the cooling
-    relai_on();
-
-  }
+    relai_on(); }
   else
   {
     //turn on the cooling
-    relai_off();
+    if ((temp_set >= 1) && ((t-0.3) > temp_set)) { relai_off(); } 
   }
 }
 void loop() // boucle  principale
@@ -563,11 +570,12 @@ CAYENNE_OUT(V1)
     //
     dtostrf(t, 4, 2, str_t );
     //
+    Serial.println(thermostat_type);
     Cayenne.virtualWrite(V1, (str_t), TYPE_TEMPERATURE, UNIT_CELSIUS);
-    if (thermostat_type == "0") {
+    if (thermostat_type == "1") {
       thermostat_heat();
     }  // Thermostat pour chauffage
-    if (thermostat_type == "1") {
+    if (thermostat_type == "0") {
       thermostat_cool();
     }  // Thermostat pour climatisation
   }
