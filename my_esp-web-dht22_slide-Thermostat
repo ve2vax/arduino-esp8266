@@ -79,6 +79,9 @@ String getPage() {
   page += ")";
   page += "<h3><INPUT type='radio' name='Relai_b' value='1'>ON";
   page += "<INPUT type='radio' name='Relai_b' value='0'>OFF</li></ul>";
+  page += "<br><input type='radio' name='thermostat_type' value='0'> <label> cooling: </label>";
+  page += "<input type='radio' name='thermostat_type' value='1'> <label> heating: </label>";
+  page += "<input type='radio' name='thermostat_type' value='2' checked='checked' /> <label> disable: </label>";
   page += "<INPUT type='submit' value='Actualiser'></h3>";
   page += "<br>";
   page += "</body></html>";
