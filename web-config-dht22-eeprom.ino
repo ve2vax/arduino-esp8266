@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.4
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018  // Version 1.3 beta  voir thermostat ce programme est obsolite
 // Projet  le plus complet 
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour le configurer avec l'adresse IP: 192.168.4.1
@@ -10,7 +10,7 @@
 #include <CayenneMQTTESP8266.h>
 
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+//#include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 #include <time.h>
