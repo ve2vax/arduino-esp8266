@@ -7,7 +7,7 @@
 // Avec  sonde DHT22 connecter sur GPIO2 OneWire
 // Et entrée logic sur pin gpio5 sauf avec bmp280 ou bme280 
 // et relai sur pin gpio4 Et ajoute de custom widget  slide  comme thermostat programmable : utilisez channel 9 pour chaufage , pour  la climatisation
-// le relai sera sur pin gpio0 , si la sonde est de type BME280 ou BMP280
+// le relai sera sur pin gpio3 , si la sonde est de type BME280 ou BMP280
 // et entrée logic sur pin gpio1  avec bmp280 ou bme280 ***NOTE IMPORTANT il faut modifier le circuit 
 
 #include <CayenneMQTTESP8266.h>
