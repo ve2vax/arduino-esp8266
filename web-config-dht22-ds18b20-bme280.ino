@@ -1,5 +1,5 @@
 // Normand Labossiere VE2VAX / VA2NQ Nov-2018  version ds18b20 Version 1.4.4 Incluant les sondes bmp280,bme280
-// UN des Projets  le plus complet
+// DS18b20  et DHT11 ou DHT22 -       UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
 // et ainsi le programmer en serie et les distribuer,aux amis, et pour simplifier sa reutilisation.
@@ -74,6 +74,7 @@ String qctemp_set = "";
  #define DHTPIN 2          // Pin gpio2 le led sur lequel est branché le DHT
  DHT dht(DHTPIN, DHTTYPE);
 #endif
+
 #ifdef DS18B20                // Data wire is plugged into port gpi0 2(LED) on the ESP8266
   #include <DallasTemperature.h>
   #include <DS18B20.h>
@@ -633,7 +634,7 @@ CAYENNE_OUT(V1)
     char str_t[5];     //result string 5 positions + \0 at the end
     get_temp();
     // converti float to string type
-    // format 5 positions with 2 decimal places
+    // format 4 positions with 2 decimal places
     //
     dtostrf(t, 4, 2, str_t );
     //
