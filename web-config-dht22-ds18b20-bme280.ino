@@ -1,5 +1,5 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018  version ds18b20 Version 1.4.4 Incluant les sondes bmp280,bme280
-// DS18b20  et DHT11 ou DHT22 -       UN des Projets  le plus complet
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018  version ds18b20 Version 1.4.5 Incluant les sondes bmp280,bme280
+// UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
 // et ainsi le programmer en serie et les distribuer,aux amis, et pour simplifier sa reutilisation.
@@ -18,16 +18,17 @@
 #define CAYENNE_PRINT serial
 // Select the define to Include all  you need for your sensor
 //------------------------------------------------------------------------------
-// Dé-commentez la ligne qui correspond à votre capteur
-//#define DHTTYPE DHT11     // DHT11
-//#define DHTTYPE DHT22     // DHT22 = (AM2302)
-//#define DS18B20 1         // pour sonde DS18B20 , selectionnez
-//#define BME280 1          // pour sonde bme280 , selectionnez
-#define BMP280 1          // pour sonde bmp280 , selectionnez
+// Dé-commentez la ligne qui correspond à votre capteur  Librairie:OneWire version=2.3.4 author=Jim Studt, Tom Pollard, Robin James, Glenn Trewitt
+//#define DHTTYPE DHT11     // DHT11 Librairie:DHT sensor library version=1.3.0 author=Adafruit
+//#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
+//#define DS18B20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
+#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
+//#define BMP280 1          // pour sonde bmp280 , selectionnez Librairie:Adafruit BMP280 Library version=1.0.2 author=Adafruit
 //------------------------------------------------------------------------------
-#define BMP280_ADDRESS                (0x77)  //Address par defaut
+//#define BMP280_ADDRESS                (0x77)  //Address par defaut
 #define BME280_ADDRESS                (0x76)  //Address par defaut
 
+#define bme_temp_offset -2.5
 #define input 5        // gpio5= INPUT SWITCH opto-coupleur  Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
 #define relay 4        // gpio4 = relay   Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
 #define relay_state 15 // Option voir fonction CAYENNE_OUT(V4) , pin  gpio15 connecter sur GPIO4,relay state read 
@@ -54,18 +55,17 @@ String qctemp_set = "";
 
 #ifdef BME280
  #include <Adafruit_BME280.h> //sensor library Adafruit or other
- #include <Wire.h>
+ //#include <Wire.h>
  #define input 1        
  #define relay 3
  Adafruit_BME280 bme; //Create an instance of the sensor
 #endif
 
 #ifdef BMP280
- #define ONE_WIRE_BUS 2
  #define input 1        
  #define relay 3
  #include <Adafruit_BMP280.h> //sensor library Adafruit or other
- #include <Wire.h>
+ //#include <Wire.h>
  Adafruit_BMP280 bme; //Create an instance of the sensor
 #endif
 
@@ -74,7 +74,6 @@ String qctemp_set = "";
  #define DHTPIN 2          // Pin gpio2 le led sur lequel est branché le DHT
  DHT dht(DHTPIN, DHTTYPE);
 #endif
-
 #ifdef DS18B20                // Data wire is plugged into port gpi0 2(LED) on the ESP8266
   #include <DallasTemperature.h>
   #include <DS18B20.h>
@@ -132,10 +131,10 @@ String getPage() {
 }
 void get_temp() {
   #ifdef BMP280
-   t = bme.readTemperature();
+   t = (bme.readTemperature()) + bme_temp_offset;
   #endif
   #ifdef BME280
-   t = bme.readTemperature();
+   t = (bme.readTemperature()) + bme_temp_offset;
    h = bme.readHumidity();
   #endif
   #ifdef DHTTYPE 
@@ -634,7 +633,7 @@ CAYENNE_OUT(V1)
     char str_t[5];     //result string 5 positions + \0 at the end
     get_temp();
     // converti float to string type
-    // format 4 positions with 2 decimal places
+    // format 5 positions with 2 decimal places
     //
     dtostrf(t, 4, 2, str_t );
     //
