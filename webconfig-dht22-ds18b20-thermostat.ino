@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018  version ds18b20 Version 1.4.3
+// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.4
 // UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -13,27 +13,19 @@
 // #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
+
 #define CAYENNE_DEBUG
 #define CAYENNE_PRINT serial
-// Include the libraries we need
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <DS18B20.h>
-#include <DHT.h>          // Librairie des capteurs DHT   + Adafruit unified sensor
-// Data wire is plugged into port gpi0 2(LED) on the ESP8266
-// Dé-commentez les lignes qui correspond à votre capteur
-//#define DHTTYPE DHT11   // DHT11
-//#define DHTTYPE DHT22     // DHT22 = (AM2302)
-#define DS18B20 
-#define DHTPIN 2          // Pin gpio2 le led sur lequel est branché le DHT
-#define ONE_WIRE_BUS 2
- 
 
+#include <DHT.h>          // Librairie des capteurs DHT   + Adafruit unified sensor
 #define input 5           // gpio5= INPUT SWITCH opto-coupleur
 #define relay 4           // gpio4 = relay
 #define relay_state 15    // Option voir fonction CAYENNE_OUT(V4) , pin  gpio15 connecter sur GPIO4,relay state read 
-
-
+#define DHTPIN 2          // Pin gpio2 le led sur lequel est branché le DHT
+// Dé-commentez la ligne qui correspond à votre capteur
+//#define DHTTYPE DHT11   // DHT11
+#define DHTTYPE DHT22     // DHT22 = (AM2302)
+//
 char* ssid = "ve2ums-iot-19" ;  //Change the ssid for every devices you program
 //                              //to prevent duplicated SSID in AP
 //
@@ -53,15 +45,7 @@ String on_red = "<span style='background-color: #FF0000'>ON</span>";
 int temp_set;   //temperature thermostat valeur de depart par defaut on power on
 String qctemp_set = "";
 
-#ifdef DHTTYPE
- DHT dht(DHTPIN, DHTTYPE);
-  #else
-  #define ONE_WIRE_BUS 2
-  OneWire oneWire(ONE_WIRE_BUS);
-  // Pass our oneWire reference to Dallas Temperature. 
-  DallasTemperature sensor(&oneWire);
-#endif
-
+DHT dht(DHTPIN, DHTTYPE);
 unsigned long h = 0;
 float t = 0;
 
@@ -106,16 +90,7 @@ String getPage() {
   page += "</body></html>";
   return page;
 }
-void get_temp() {
-  #ifdef DHTTYPE 
-   t = dht.readTemperature();
-   h = dht.readHumidity();
-  #else
-   sensor.requestTemperatures(); // Send the command to get temperatures
-   delay(100);
-   t = sensor.getTempCByIndex(0);
-  #endif 
-}
+
 void relai_on() {
   digitalWrite(relay, LOW);
   etatRelay = "Off";
@@ -156,7 +131,8 @@ void handleTest() {
   } else {
     opto_in = digitalRead(input);                      // read the input pin
     server.send (200, "text/html", getPage());
-    get_temp();
+    t = dht.readTemperature();
+    h = dht.readHumidity();
     }
 }
 
@@ -177,11 +153,7 @@ void handleSubmit() {
 }
 
 void setup() {
-#ifdef DHTTYPE
-  dht.begin();
- #else
-  sensor.begin(); //ds18b20  
-#endif  
+
   Serial.begin(115200);
   EEPROM.begin(300);
   delay(1000);
@@ -197,6 +169,7 @@ void setup() {
   // ne pas utiliser pin4 , pin 5 si vous utilisez device I2c ,
   // elles sont utiliser pour I2C
   // pin2 = led bleu on or blinking ,if running ok, connected to wifi
+  dht.begin();
   //
   Serial.println();
   Serial.println();
@@ -260,6 +233,8 @@ void setup() {
     Serial.print("trying wifi... ");
     WiFi.hostname(ssid);
     WiFi.begin(esid.c_str(), epass.c_str());
+    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str(), esid.c_str(), epass.c_str());   //, esid.c_str(), epass.c_str());
+
     Serial.print("....ok ");
     if (testWifi()) {
       Serial.print("web start mode=0");
@@ -302,7 +277,7 @@ void launchWeb(int webtype) {
   Serial.println("Server started.");
   if (softap == 0) {
     delay(100);
-    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str());   //, esid.c_str(), epass.c_str());
+    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str(), esid.c_str(), epass.c_str());   //, esid.c_str(), epass.c_str());
     Serial.println("Cayenne begin, Cayenne IOT ready .");
     Serial.println((WiFi.status()));
   }
@@ -367,6 +342,7 @@ void reset_wifi() {
   WiFi.disconnect();
   WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint
   WiFi.enableAP(false);
+  WiFi.persistent(false);
 }
 void createWebServer(int webtype)
 {
@@ -507,7 +483,7 @@ void createWebServer(int webtype)
 }
 
 void thermostat_heat() {
-  get_temp();
+  t = dht.readTemperature();
   if ((temp_set >= 1 ) && ( t > temp_set )) // si la temperature est= ou sous ZERO, coupe le chauffage
   { // ou allume le chauffage si  temp_set value  < t
     //turn off the heating
@@ -521,7 +497,7 @@ void thermostat_heat() {
   }
 }
 void thermostat_cool() {
-  get_temp();
+  t = dht.readTemperature();
   if ((temp_set >= 1) && (t < temp_set)) {  // si la temperature est= ou sous ZERO, coupe la climatisation
     // ou allume lea climatisation si  temp_set value  < t
     // turn off the cooling
@@ -573,7 +549,7 @@ CAYENNE_OUT(V8)
 CAYENNE_IN(V9)  // channel 9
 {
   int t_temp_set = getValue.asInt();
-  get_temp();
+  t = dht.readTemperature();
   Serial.println("readed temp_set from cayenne");
   Serial.print(t_temp_set);
   if ((temp_set) != (t_temp_set)) {
@@ -591,7 +567,7 @@ CAYENNE_OUT(V1)
   {
     // Lecture de la température en Celcius
     char str_t[5];     //result string 5 positions + \0 at the end
-    get_temp();
+    t = dht.readTemperature();
     // converti float to string type
     // format 5 positions with 2 decimal places
     //
@@ -606,7 +582,7 @@ CAYENNE_OUT(V1)
       thermostat_cool();
     }  // Thermostat pour climatisation
   }
-#ifdef DHTTYPE
+
   CAYENNE_OUT(V2)
   {
     //. Lecture  Humidite
@@ -615,7 +591,6 @@ CAYENNE_OUT(V1)
 
     Cayenne.virtualWrite(V2, (h), TYPE_RELATIVE_HUMIDITY, UNIT_PERCENT);
   }
-#endif  
   CAYENNE_OUT(V3)  //input  opto coupleur
   {
     opto_in = digitalRead(input);                      // read the input pin
@@ -634,3 +609,4 @@ CAYENNE_OUT(V1)
   //  int value = digitalRead(relay_state);                      // loop relay state read, read the input pin
   //  Cayenne.virtualWrite(V4 , value, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
   //}
+
