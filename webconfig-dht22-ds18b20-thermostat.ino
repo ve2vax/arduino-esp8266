@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018   Version 1.4.4
+// Normand Labossiere VE2VAX / VA2NQ Dec-2018   Version 1.4.5
 // UN des Projets  le plus complet
 // Ce programme est  pour eviter de reprogrammer le ESP8266 pour chaque projet
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -10,7 +10,7 @@
 
 #include <CayenneMQTTESP8266.h>
 #include <ESP8266WiFi.h>
-// #include <ESP8266mDNS.h>
+#include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <EEPROM.h>
 
@@ -26,8 +26,12 @@
 //#define DHTTYPE DHT11   // DHT11
 #define DHTTYPE DHT22     // DHT22 = (AM2302)
 //
-char* ssid = "ve2ums-iot-19" ;  //Change the ssid for every devices you program
+const char *ssid_ap = "ve2vax-iot-17" ;  //Change the ssid for every devices you program
 //                              //to prevent duplicated SSID in AP
+const byte DNS_PORT = 53;
+IPAddress apIP(192, 168, 4, 1);
+DNSServer dnsServer;
+
 //
 int opto_in;
 int softap = 0;
@@ -231,7 +235,7 @@ void setup() {
   if ( esid.length() > 1 ) {
   reset_wifi();
     Serial.print("trying wifi... ");
-    WiFi.hostname(ssid);
+    WiFi.hostname(ssid_ap);
     WiFi.begin(esid.c_str(), epass.c_str());
     Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str(), esid.c_str(), epass.c_str());   //, esid.c_str(), epass.c_str());
 
@@ -274,6 +278,7 @@ void launchWeb(int webtype) {
   Serial.println(WiFi.softAPIP());
   createWebServer(webtype);
   // Start the server
+  dnsServer.processNextRequest();
   Serial.println("Server started.");
   if (softap == 0) {
     delay(100);
@@ -329,10 +334,12 @@ void setupAP(void) {
   }
   st += "</ol>";
   delay(200);
-
-  WiFi.softAP(ssid);
+  
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAP(ssid_ap);
   Serial.println("softap");
   softap = 1;
+  dnsServer.start(DNS_PORT, "*", apIP);
   delay(1000);
   launchWeb(1);
   Serial.println("softAP Ready-over");
@@ -510,7 +517,7 @@ void thermostat_cool() {
 }
 void loop() // boucle  principale
 {
-  //if (softap == 1) { Cayenne.loop(); }
+  if (softap == 1) { dnsServer.processNextRequest(); }
   if (WiFi.status() == WL_CONNECTED) {
     Cayenne.loop();
   }
@@ -609,4 +616,3 @@ CAYENNE_OUT(V1)
   //  int value = digitalRead(relay_state);                      // loop relay state read, read the input pin
   //  Cayenne.virtualWrite(V4 , value, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
   //}
-
