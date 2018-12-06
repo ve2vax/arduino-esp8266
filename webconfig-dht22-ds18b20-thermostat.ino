@@ -237,12 +237,13 @@ void setup() {
     Serial.print("trying wifi... ");
     WiFi.hostname(ssid_ap);
     WiFi.begin(esid.c_str(), epass.c_str());
-    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str(), esid.c_str(), epass.c_str());   //, esid.c_str(), epass.c_str());
-
+    
     Serial.print("....ok ");
     if (testWifi()) {
       Serial.print("web start mode=0");
       softap = 0;
+      Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str(), esid.c_str(), epass.c_str());   //, esid.c_str(), epass.c_str());
+
       launchWeb(0);
       return;
     }
@@ -380,6 +381,13 @@ void createWebServer(int webtype)
 
     server.on ( "/cleareeprom", handle_cleareeprom );
 
+    server.onNotFound([]() {
+    String message = "<!DOCTYPE HTML>\r\n<html>";
+    message += "<h4>Hello IOT Setup</h4>\n\n";
+    message += "<head><meta http-equiv='Refresh' content='5; url=http://192.168.4.1/'></head></html>";
+    server.send(200, "text/html", message);
+    });
+    
     server.on("/setting", []() {
       String qsid = server.arg("ssid");
       String qpass = server.arg("pass");
@@ -616,3 +624,4 @@ CAYENNE_OUT(V1)
   //  int value = digitalRead(relay_state);                      // loop relay state read, read the input pin
   //  Cayenne.virtualWrite(V4 , value, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
   //}
+
