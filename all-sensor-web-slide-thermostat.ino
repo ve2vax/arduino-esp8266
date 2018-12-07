@@ -440,7 +440,14 @@ void createWebServer(int webtype)
     server.on( "/test", handleTest );
 
     server.on ( "/cleareeprom", handle_cleareeprom );
-
+    
+    server.onNotFound([]() {
+    String message = "<!DOCTYPE HTML>\r\n<html>";
+    message += "<h4>Hello IOT Setup</h4>\n\n";
+    message += "<head><meta http-equiv='Refresh' content='5; url=http://192.168.4.1/'></head></html>";
+    server.send(200, "text/html", message);
+    });
+    
     server.on("/setting", []() {
       String qsid = server.arg("ssid");
       String qpass = server.arg("pass");
@@ -537,13 +544,6 @@ void createWebServer(int webtype)
     server.on( "/test", handleTest );
 
     server.on ( "/cleareeprom", handle_cleareeprom );
-    
-    server.onNotFound([]() {
-    String message = "<!DOCTYPE HTML>\r\n<html>";
-    message += "<h4>Hello IOT Setup</h4>\n\n";
-    message += "<head><meta http-equiv='Refresh' content='5; url=http://192.168.4.1/'></head></html>";
-    server.send(200, "text/html", message);
-    });
     
     server.on("/reset", []() {
       content = "<!DOCTYPE HTML>\r\n<html>";
