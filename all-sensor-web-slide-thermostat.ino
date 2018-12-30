@@ -1,15 +1,16 @@
-// Normand Labossiere VE2VAX / VA2NQ Nov-2018    Version 1.4.7 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ DeC-2018    Version 1.4.9 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
 // et ainsi le programmer en serie et les distribuer,aux amis, et pour simplifier sa reutilisation.
 // Et il sauvegarde  sa config dans  la memoire EEPROM
 // Avec  les sondes DHT22,dht11 DS18b20 sont  connecter sur GPIO2 avec OneWire.
-// Et entrée logic sur pin gpio5 sauf avec bmp280 ou bme280 
+// Et entrée logic sur pin gpio5 sauf avec bmp280 ou bme280 ** voir sauf si .
 // et relai sur pin gpio4 Et ajoute de custom widget  slide  comme thermostat programmable : utilisez channel 9 pour chaufage , pour  la climatisation
-// le relai sera sur pin gpio3 , si la sonde est de type BME280 ou BMP280 ( Necesite une modification du circuit/
+// le relai sera sur pin gpio3 , si la sonde est de type BME280 ou BMP280 ( Necesite une modification du circuit sauf si vous changer le fichier
+//   pins_arduino.h , en changant les pins definition " SDA & SDC  de votre board/ hardware/esp8266
 // et entrée logic sur pin gpio1  avec bmp280 ou bme280 ***NOTE IMPORTANT il faut modifier le circuit 
-
+// ## ajout d'un watchdog timer .
 #include <CayenneMQTTESP8266.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -21,20 +22,31 @@
 //------------------------------------------------------------------------------
 // Dé-commentez la ligne qui correspond à votre capteur  Librairie:OneWire version=2.3.4 author=Jim Studt, Tom Pollard, Robin James, Glenn Trewitt
 //#define DHTTYPE DHT11     // DHT11 Librairie:DHT sensor library version=1.3.0 author=Adafruit
-#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
+//#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
 //#define DS18B20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
-//#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
+#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
 //#define BMP280 1          // pour sonde bmp280 , selectionnez Librairie:Adafruit BMP280 Library version=1.0.2 author=Adafruit
+#define OLED_lcd
 //------------------------------------------------------------------------------
 //#define BMP280_ADDRESS                (0x77)  //Address par defaut
 #define BME280_ADDRESS                (0x76)  //Address par defaut
 
-#define delta_t 0.3     // delta hysteresis de temperature de theermostat 
+#define delta_t 0.3     // delta hysteresis de temperature de thermostat 
 #define bme_temp_offset -2.5    // valeur de correction pour sonde bme280 , il y a un ecart avec la lecture
 #define input 5        // gpio5= INPUT SWITCH opto-coupleur  Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
 #define relay 4        // gpio4 = relay   Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
 #define relay_state 15 // Option voir fonction CAYENNE_OUT(V4) , pin  gpio15 connecter sur GPIO4,relay state read 
-
+#ifdef OLED_lcd
+ #include "Wire.h"
+ #include <Adafruit_GFX.h>
+ #include <Adafruit_SSD1306.h> 
+ #define SCREEN_WIDTH 128 // OLED display width, in pixels
+ #define SCREEN_HEIGHT 32 // OLED display height, in pixels
+ // pins(14,12); //first # as SDA and second # as SCL
+ // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+ #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#endif
 
 char* ssid_ap = "ve2ums-iot-19" ;  //Change the ssid for every devices you program
 //                              //to prevent duplicated SSID in AP
@@ -60,14 +72,14 @@ String qctemp_set = "";
 
 #ifdef BME280
  #include <Adafruit_BME280.h> //sensor library Adafruit or other
- #define input 1        
- #define relay 3
+ //#define input 1        
+ //#define relay 3
  Adafruit_BME280 bme; //Create an instance of the sensor
 #endif
 
 #ifdef BMP280
- #define input 1        
- #define relay 3
+ //#define input 1        
+ //#define relay 3
  #include <Adafruit_BMP280.h> //sensor library Adafruit or other
  Adafruit_BMP280 bme; //Create an instance of the sensor
 #endif
@@ -211,6 +223,29 @@ void handleSubmit() {
 }
 
 void setup() {
+  //ESP   Watchdog timer 
+ESP.wdtDisable();
+ESP.wdtEnable(WDTO_8S);
+
+#ifdef OLED_lcd
+ // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+ // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  display.begin(0, 0x3C, false);
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(2);
+    display.setCursor(0,0);
+    display.println("Starting");
+    display.display(); 
+    delay(3000);
+    display.clearDisplay();
+#endif
 #ifdef DHTTYPE
   dht.begin();
 #endif  
@@ -571,6 +606,7 @@ void thermostat_heat() {
     relai_off(); }
   }
 }
+
 void thermostat_cool() {
   get_temp();
   if ((temp_set >= 1) && (t < temp_set)) {  // si la temperature est= ou sous ZERO, coupe la climatisation
@@ -583,25 +619,40 @@ void thermostat_cool() {
     if ((temp_set >= 1) && ((t-delta_t) > temp_set)) { relai_off(); } 
   }
 }
+void thermostat_event() {
+  if (thermostat_type == "1") {
+     thermostat_heat();
+  }  // Thermostat pour chauffage
+  if (thermostat_type == "0") {
+     thermostat_cool();
+    }
+}          
 void loop() // boucle  principale
 {
+  ESP.wdtFeed();
   if (softap == 1) { dnsServer.processNextRequest(); }
   if (WiFi.status() == WL_CONNECTED) {
     Cayenne.loop();
   }
+  else 
+  {
+    WiFi.begin(esid.c_str(), epass.c_str());
+    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str()); 
+  }
   server.handleClient();
+  thermostat_event();
 }
-
 // Les fonctions de cayenne called by  Cayenne.loop
-CAYENNE_IN(8)
-{
+CAYENNE_IN(8) {
   int currentValue = getValue.asInt();
   if (currentValue == 1)
   {
     //do whatever you want when you turn on the button on cayenne dashboard
     relai_off();
   }
-  else
+  else {
+    
+  }
   {
     //do whatever you want when you turn off the button on cayenne dashboard
     relai_on();
@@ -627,6 +678,7 @@ CAYENNE_IN(V9)  // channel 9
   get_temp();
   Serial.println("readed temp_set from cayenne");
   Serial.print(t_temp_set);
+  Cayenne.virtualWrite(V9, t_temp_set);
   if ((temp_set) != (t_temp_set)) {
     temp_set = t_temp_set;
     
@@ -647,6 +699,15 @@ CAYENNE_OUT(V1)
     // format 5 positions with 2 decimal places
     //
     dtostrf(t, 4, 2, str_t );
+    #ifdef OLED_lcd
+     
+     display.setTextSize(2);
+     display.setCursor(0,0);
+     display.clearDisplay();
+     display.print(t);
+     display.print(" 'C");
+     display.display();
+    #endif
     //
     Serial.println(thermostat_type);
     Cayenne.virtualWrite(V1, (str_t), TYPE_TEMPERATURE, UNIT_CELSIUS);
@@ -663,7 +724,13 @@ CAYENNE_OUT(V1)
     //. Lecture  Humidite
     // Send the Humidity value to Cayenne
     h = dht.readHumidity();
-
+    #ifdef OLED_lcd
+     display.setTextSize(2);
+     display.setCursor(0,16);
+     display.print(h);
+     display.print(" %");
+     display.display();
+    #endif
     Cayenne.virtualWrite(V2, (h), TYPE_RELATIVE_HUMIDITY, UNIT_PERCENT);
   }
 #endif  
@@ -673,7 +740,13 @@ CAYENNE_OUT(V1)
     //. Lecture  Humidite
     // Send the Humidity value to Cayenne
     h = bme.readHumidity();
-
+    #ifdef OLED_lcd
+     display.setTextSize(2);
+     display.setCursor(0,16);
+     display.print(h);
+     display.print(" %");
+     display.display();
+    #endif
     Cayenne.virtualWrite(V2, (h), TYPE_RELATIVE_HUMIDITY, UNIT_PERCENT);
   }
  #endif
@@ -683,7 +756,14 @@ CAYENNE_OUT(V1)
     //. Lecture  pression Atmospherique
     // Send the presure value to Cayenne
     p = bme.readPressure();
-
+    #ifdef OLED_lcd
+     
+     display.setTextSize(2);
+     display.setCursor(0,16);
+     display.print(h);
+     display.print(" %");
+     display.display();
+    #endif
     Cayenne.virtualWrite(V0, (p), TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL);
   }
 #endif
