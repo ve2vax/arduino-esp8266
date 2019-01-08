@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ DeC-2018    Version 1.4.9 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ DeC-2018    Version 1.4.9.1 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -21,17 +21,21 @@
 // Select the define to Include all  you need for your sensor
 //------------------------------------------------------------------------------
 // Dé-commentez la ligne qui correspond à votre capteur  Librairie:OneWire version=2.3.4 author=Jim Studt, Tom Pollard, Robin James, Glenn Trewitt
+// Pour les sondes de type DHT ou DS18B20 , onewire connection sur pin gpio2
 //#define DHTTYPE DHT11     // DHT11 Librairie:DHT sensor library version=1.3.0 author=Adafruit
-//#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
+#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
 //#define DS18B20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
-#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
+//#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
 //#define BMP280 1          // pour sonde bmp280 , selectionnez Librairie:Adafruit BMP280 Library version=1.0.2 author=Adafruit
-#define OLED_lcd
-//------------------------------------------------------------------------------
+//#define OLED_lcd
 //#define BMP280_ADDRESS                (0x77)  //Address par defaut
-#define BME280_ADDRESS                (0x76)  //Address par defaut
+//#define BME280_ADDRESS                (0x76)  //Address par defaut
 
-#define delta_t 0.3     // delta hysteresis de temperature de thermostat 
+//------------------------------------------------------------------------------
+
+char* ssid_ap = "ve2ums-iot-20" ;  //Change the ssid for every devices you program
+//                              //to prevent duplicated SSID in AP
+#define delta_t 0.2     // delta hysteresis de temperature de thermostat 
 #define bme_temp_offset -2.5    // valeur de correction pour sonde bme280 , il y a un ecart avec la lecture
 #define input 5        // gpio5= INPUT SWITCH opto-coupleur  Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
 #define relay 4        // gpio4 = relay   Sauf BME280 ou bmp280  voir #ifdef bmp280 ou bme280
@@ -48,8 +52,6 @@
  Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
 
-char* ssid_ap = "ve2ums-iot-19" ;  //Change the ssid for every devices you program
-//                              //to prevent duplicated SSID in AP
 //
 const byte DNS_PORT = 53;
 IPAddress apIP(192, 168, 4, 1);
@@ -628,16 +630,17 @@ void thermostat_event() {
     }
 }          
 void loop() // boucle  principale
-{
+{ 
   ESP.wdtFeed();
   if (softap == 1) { dnsServer.processNextRequest(); }
   if (WiFi.status() == WL_CONNECTED) {
     Cayenne.loop();
-  }
+    thermostat_event();
+  server.handleClient(); }
   else 
   {
     WiFi.begin(esid.c_str(), epass.c_str());
-    Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str()); 
+    //Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str()); 
   }
   server.handleClient();
   thermostat_event();
@@ -772,9 +775,10 @@ CAYENNE_OUT(V1)
   {
     //. Lecture  pression Atmospherique
     // Send the presure value to Cayenne
-    p = bme.readPressure();
-
-    Cayenne.virtualWrite(V0, (p), TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL);
+    p = (30 - (bme.readPressure() * 0.0002953));
+   
+    #define UNIT_INHG "Hg" // pouce Mercure
+    Cayenne.virtualWrite(V0, (p)); //, TYPE_BAROMETRIC_PRESSURE, UNIT_INHG); //UNIT_HECTOPASCAL
   }
 #endif  
   CAYENNE_OUT(V3)  //input  opto coupleur
