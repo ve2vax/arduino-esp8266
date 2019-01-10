@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ DeC-2018    Version 1.4.9.1 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ DeC-2018    Version 1.4.9 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -140,7 +140,7 @@ String getPage() {
   page += "<INPUT type='radio' name='Relai_b' value='0'>OFF</li></ul>";
   page += "<br><input type='radio' name='thermostat_type' value='0'> <label> cooling: </label>";
   page += "<input type='radio' name='thermostat_type' value='1'> <label> heating: </label>";
-  page += "<input type='radio' name='thermostat_type' value='2'> <label> disable: </label>"; // checked='checked'
+  page += "<input type='radio' name='thermostat_type' value='2' checked='checked' /> <label> disable: </label>"; // checked='checked'
   page += "<INPUT type='submit' value='Actualiser'></h3>";
   page += "<br>";
   page += "</body></html>";
@@ -168,12 +168,14 @@ void relai_on() {
   digitalWrite(relay, LOW);
   etatRelay = "Off";
   RelayValue == "0";
+  Serial.println("device off");
   
 }
 void relai_off() {
   digitalWrite(relay, HIGH);
   etatRelay = (on_red);
   RelayValue == "1";
+  Serial.println("device on");
 }
 void handle_cleareeprom() {
     content = "<!DOCTYPE HTML>\r\n<html>";
@@ -643,7 +645,6 @@ void loop() // boucle  principale
     //Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str()); 
   }
   server.handleClient();
-  thermostat_event();
 }
 // Les fonctions de cayenne called by  Cayenne.loop
 CAYENNE_IN(8) {
@@ -653,9 +654,7 @@ CAYENNE_IN(8) {
     //do whatever you want when you turn on the button on cayenne dashboard
     relai_off();
   }
-  else {
-    
-  }
+  else 
   {
     //do whatever you want when you turn off the button on cayenne dashboard
     relai_on();
@@ -666,11 +665,11 @@ CAYENNE_OUT(V8)
   int value = digitalRead(relay);  // read the input pin
   if (value == 1) {
     Cayenne.virtualWrite(V8 , 1, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
-    relai_off();
+    //relai_off();
   }
   else {
     Cayenne.virtualWrite(V8 , 0, TYPE_DIGITAL_SENSOR, UNIT_DIGITAL);
-    relai_on(); 
+    //relai_on(); 
   }
 
 }
