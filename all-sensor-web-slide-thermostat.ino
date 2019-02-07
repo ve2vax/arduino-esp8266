@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.0 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.1 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -23,9 +23,9 @@
 // Dé-commentez la ligne qui correspond à votre capteur  Librairie:OneWire version=2.3.4 author=Jim Studt, Tom Pollard, Robin James, Glenn Trewitt
 // Pour les sondes de type DHT ou DS18B20 , onewire connection sur pin gpio2
 //#define DHTTYPE DHT11     // DHT11 Librairie:DHT sensor library version=1.3.0 author=Adafruit
-#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
-//#define DS18B20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
-//#include <OneWire.h>      // pour sonde DS18B20 , doit etre selectionnez si vous utiliser la sonde DS18B20
+//#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
+#define DS18b20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
+#include <OneWire.h>      // pour sonde DS18B20 , doit etre selectionnez si vous utiliser la sonde DS18B20
 //#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
 //#define BMP280 1          // pour sonde bmp280 , selectionnez Librairie:Adafruit BMP280 Library version=1.0.2 author=Adafruit
 //#define OLED_lcd
@@ -92,7 +92,7 @@ String qctemp_set = "";
  #define DHTPIN 2          // Pin gpio2 le led sur lequel est branché le DHT
  DHT dht(DHTPIN, DHTTYPE);
 #endif
-#ifdef DS18B20                // Data wire is plugged into port gpi0 2(LED) on the ESP8266
+#ifdef DS18b20                // Data wire is plugged into port gpi0 2(LED) on the ESP8266
   #include <DallasTemperature.h>
   #include <DS18B20.h>
   #include <OneWire.h>
@@ -159,7 +159,7 @@ void get_temp() {
    t = dht.readTemperature();
    h = dht.readHumidity();
   #endif
-  #ifdef DS18B20 
+  #ifdef DS18b20 
    ds18b20.requestTemperatures(); // Send the command to get temperatures for DS18b20
    delay(100);
    t = ds18b20.getTempCByIndex(0);
@@ -254,7 +254,7 @@ ESP.wdtEnable(WDTO_8S);
 #ifdef DHTTYPE
   dht.begin();
 #endif  
-#ifdef DS18B20
+#ifdef DS18b20
   ds18b20.begin(); //ds18b20  
 #endif
 #ifdef BME280
