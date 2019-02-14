@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.1 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.2 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -23,15 +23,15 @@
 // Dé-commentez la ligne qui correspond à votre capteur  Librairie:OneWire version=2.3.4 author=Jim Studt, Tom Pollard, Robin James, Glenn Trewitt
 // Pour les sondes de type DHT ou DS18B20 , onewire connection sur pin gpio2
 //#define DHTTYPE DHT11     // DHT11 Librairie:DHT sensor library version=1.3.0 author=Adafruit
-//#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
-#define DS18b20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
-#include <OneWire.h>      // pour sonde DS18B20 , doit etre selectionnez si vous utiliser la sonde DS18B20
+#define DHTTYPE DHT22     // DHT22 = (AM2302) Librairie:DHT sensor library version=1.3.0 author=Adafruit
+//#define DS18b20 1         // pour sonde DS18B20 , selectionnez librairie:DallasTemperature version=3.8.0 author=Miles Burton
+//#include <OneWire.h>      // pour sonde DS18B20 , doit etre selectionnez si vous utiliser la sonde DS18B20
 //#define BME280 1          // pour sonde bme280 , selectionnez Librairie:Adafruit BME280 Library version=1.0.7 author=Adafruit
 //#define BMP280 1          // pour sonde bmp280 , selectionnez Librairie:Adafruit BMP280 Library version=1.0.2 author=Adafruit
-//#define OLED_lcd
+#define OLED_lcd
 //#define BMP280_ADDRESS                (0x77)  //Address par defaut
 //#define BME280_ADDRESS                (0x76)  //Address par defaut
-char* ssid_ap = "ve2ums-iot-20" ;  //Change the ssid for every devices you program
+char* ssid_ap = "ve2ums-iot-21" ;  //Change the ssid for every devices you program
 //                              //to prevent duplicated SSID in AP
 //------------------------------------------------------------------------------
 
@@ -189,7 +189,12 @@ void handle_cleareeprom() {
     EEPROM.commit();
     reset_wifi();
     softap = 0;
-    delay(100);
+    ESP.eraseConfig();
+    delay(200);
+    ESP.reset();
+    // Fire Watchdog Reset
+    while(1);
+  
 }
 void handleTest() {
   if (server.hasArg("thermostat_type")) {
@@ -228,6 +233,7 @@ void handleSubmit() {
 }
 
 void setup() {
+  
   //ESP   Watchdog timer 
 ESP.wdtDisable();
 ESP.wdtEnable(WDTO_8S);
@@ -266,7 +272,7 @@ ESP.wdtEnable(WDTO_8S);
 #endif#
   
   Serial.begin(115200);
-  EEPROM.begin(300);
+  EEPROM.begin(512);
   delay(1000);
   reset_wifi();
   //Setup cayenne variable et env.
@@ -338,7 +344,9 @@ ESP.wdtEnable(WDTO_8S);
   //EEPROM.commit();
   // Lecture des variables dans  le eeprom terminer
   //
-  if ( esid.length() > 1 ) {
+  if ( esid.length() > 1 ) 
+  {
+   Serial.print("esid > 1");
   reset_wifi();
     Serial.print("trying wifi... ");
     WiFi.hostname(ssid_ap);
@@ -348,8 +356,14 @@ ESP.wdtEnable(WDTO_8S);
       Serial.print("web start mode=0");
       softap = 0;
       launchWeb(0);
-      return;
-    }
+      return; }
+    else {
+      Serial.print("unable to connect to wifi"); 
+      reset_wifi();
+      ESP.eraseConfig();
+      //ESP.reset();
+      
+         }
   }
   setupAP();
 }
@@ -363,6 +377,7 @@ bool testWifi(void) {
   Serial.println("Waiting for Wifi to connect");
   while ( c < 25 ) {
     if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("Wifi connected");
       return true;
     }
     delay(300);
@@ -384,6 +399,9 @@ void launchWeb(int webtype) {
   // Start the server
   Serial.println("Server started.");
   if (softap == 0) {
+    WiFi.softAPdisconnect(true);
+    delay(100);
+    WiFi.mode(WIFI_STA);
     delay(100);
     Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str());   //, esid.c_str(), epass.c_str());
     Serial.println("Cayenne begin, Cayenne IOT ready .");
@@ -397,8 +415,11 @@ void launchWeb(int webtype) {
 }
 
 void setupAP(void) {
-  WiFi.mode(WIFI_STA);
+  WiFi.softAPdisconnect(true);
+  delay(100);
   WiFi.disconnect();
+  WiFi.mode(WIFI_AP);
+  delay(100);
   softap = 0;
   delay(100);
   int n = WiFi.scanNetworks();
@@ -436,6 +457,9 @@ void setupAP(void) {
     st += "</li>";
   }
   st += "</ol>";
+  WiFi.softAPdisconnect();
+  WiFi.disconnect();
+  WiFi.mode(WIFI_AP);
   delay(200);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(ssid_ap);
@@ -444,13 +468,16 @@ void setupAP(void) {
   dnsServer.start(DNS_PORT, "*", apIP);
   delay(1000);
   launchWeb(1);
-  Serial.println("softAP Ready-over");
+  Serial.println("launchweb-1");
+  Serial.println("softAP 1 Ready-over");
 
 }
 void reset_wifi() {
-  WiFi.disconnect();
-  WiFi.softAPdisconnect(false);  // Turn off  wifi Accesspoint
-  WiFi.enableAP(false);
+  WiFi.softAPdisconnect(0);
+  delay(100);
+  WiFi.softAPdisconnect();  // Turn off  wifi Accesspoint
+  WiFi.mode(WIFI_STA);
+  delay(200);
 }
 void createWebServer(int webtype)
 {
@@ -642,6 +669,7 @@ void loop() // boucle  principale
   server.handleClient(); }
   else 
   {
+    thermostat_event();
     WiFi.begin(esid.c_str(), epass.c_str());
     //Cayenne.begin(cayenne_userid.c_str(), cayenne_passwd.c_str(), cayenne_client_id.c_str()); 
   }
