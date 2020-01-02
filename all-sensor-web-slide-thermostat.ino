@@ -1,4 +1,4 @@
-// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.2 Incluant 
+// Normand Labossiere VE2VAX / VA2NQ Fev-2018    Version 1.5.3 Incluant 
 // Le  Projets  le plus complet  avec vsonde  dht22 et ds18b20 et les sondes bmp280,bme280
 // Ce programme utilise le EEPROM pour eviter de reprogrammer le ESP8266 pour chaque projet Cayenne
 // Il demarre en mode wifi access-point initialement pour sa configuration, avec l'adresse IP: 192.168.4.1
@@ -31,7 +31,7 @@
 #define OLED_lcd
 //#define BMP280_ADDRESS                (0x77)  //Address par defaut
 //#define BME280_ADDRESS                (0x76)  //Address par defaut
-char* ssid_ap = "ve2ums-iot-21" ;  //Change the ssid for every devices you program
+char* ssid_ap = "ve2ums-iot-2" ;  //Change the ssid for every devices you program
 //                              //to prevent duplicated SSID in AP
 //------------------------------------------------------------------------------
 
@@ -48,6 +48,9 @@ char* ssid_ap = "ve2ums-iot-21" ;  //Change the ssid for every devices you progr
  #define SCREEN_WIDTH 128 // OLED display width, in pixels
  #define SCREEN_HEIGHT 32 // OLED display height, in pixels
  // pins(14,12); //first # as SDA and second # as SCL
+#define PIN_WIRE_SDA (14)
+#define PIN_WIRE_SCL (12)
+
  // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
  #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
  Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -292,6 +295,11 @@ ESP.wdtEnable(WDTO_8S);
   Serial.println("Startup");
   // Lecture du eeprom pour wifi, ssid & pass
   Serial.println("Lecture du EEPROM ssid");
+  Serial.println("verification si eeprom est vide");
+  int val = EEPROM.read(1);
+  if (val == 255){
+   handle_cleareeprom(); 
+  }
   for (int i = 0; i < 32; ++i)
   {
     esid += char(EEPROM.read(i));
